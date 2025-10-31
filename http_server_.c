@@ -14,7 +14,6 @@
 #define BACKLOG 5
 #define RECV_BUFSIZE 8192
 
-/* URLデコード（%XX をデコード）。'+'はそのまま残す（例題の "2+10" を優先） */
 static char *url_decode(const char *s) {
     size_t len = strlen(s);
     char *out = malloc(len + 1);
@@ -33,13 +32,12 @@ static char *url_decode(const char *s) {
     return out;
 }
 
-/* シンプルな式評価: 整数と + - を左から順に処理する（例: 1+2-3+4） */
 static int eval_simple_expression(const char *expr, long long *out_result) {
     const char *p = expr;
     char *endptr;
     errno = 0;
     long long acc = strtoll(p, &endptr, 10);
-    if (p == endptr) return -1; // 数字で始まらない
+    if (p == endptr) return -1; 
     if (errno) return -1;
     p = endptr;
 
@@ -97,7 +95,7 @@ int main(void) {
     rsock = socket(AF_INET, SOCK_STREAM, 0);
     if (rsock < 0) { perror("socket"); return 1; }
 
-    /* SO_REUSEADDR を有効にして再起動を容易にする（学習用） */
+    /* SO_REUSEADDR を有効にして再起動を容易*/
     int opt = 1;
     if (setsockopt(rsock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
         perror("setsockopt");
@@ -124,7 +122,7 @@ int main(void) {
 
     printf("Listening on port %d ...\n", PORT);
 
-    /* 1接続だけ連続的に受け付けて処理する（学習用、ループして複数処理するのも可） */
+    /* 1接続だけ連続的に受け付けて処理する */
     for (;;) {
         csock = accept(rsock, (struct sockaddr*)&cli, &cli_len);
         if (csock < 0) {
@@ -133,7 +131,7 @@ int main(void) {
             return 1;
         }
 
-        /* リクエストを受け取る（簡易：単発readで済ませる） */
+        /* リクエストを受け取る */
         char *buf = malloc(RECV_BUFSIZE);
         if (!buf) {
             perror("malloc");
@@ -149,7 +147,7 @@ int main(void) {
         }
         buf[r] = '\0';
 
-        /* リクエストの先頭行（例: GET /calc?query=2+10 HTTP/1.1）を抽出 */
+        /* リクエストの先頭行を抽出 */
         char method[16] = {0}, path[1024] = {0}, proto[32] = {0};
         if (sscanf(buf, "%15s %1023s %31s", method, path, proto) != 3) {
             free(buf);
@@ -190,7 +188,7 @@ int main(void) {
         }
         qval[i] = '\0';
 
-        /* URLデコード（%XX を処理） */
+        /* URLデコード */
         char *decoded = url_decode(qval);
         if (!decoded) {
             free(buf);
